@@ -27,9 +27,15 @@
       background-size: 120px 120px, 140px 140px, auto; }
     .question{position:absolute;top:8px;left:12px;font-size:1.2rem;color:#7b3b4c}
     .button-area{position:absolute;inset:60px 12px 12px 12px;display:flex;align-items:center;justify-content:space-around}
-    .btn{width:28vw;max-width:180px;height:12vh;border-radius:12px;border:none;font-size:1.8rem;color:white;box-shadow:0 8px 18px var(--shadow);touch-action:none}
-    .btn-yes{background:linear-gradient(135deg,#4ee28b,#17b16f);transform-origin:center;position:relative}
-    .btn-no{background:linear-gradient(135deg,#ff6b6b,#e04444);position:absolute}
+    .btn{width:28vw;max-width:180px;height:12vh;border-radius:16px;border:none;font-size:1.6rem;color:white;box-shadow:0 12px 26px rgba(0,0,0,0.12);touch-action:none;display:flex;align-items:center;gap:10px;justify-content:center;padding:8px 12px}
+    .btn .icon{display:inline-flex;align-items:center;justify-content:center;background:transparent;border-radius:50%;padding:4px}
+    .btn-yes{background:linear-gradient(135deg,#8ef0b5,#2fb06a);transform-origin:center;position:relative;border:2px solid rgba(255,255,255,0.18)}
+    .btn-no{background:linear-gradient(135deg,#ff9aa2,#ff5a72);position:absolute;border:2px solid rgba(255,255,255,0.12)}
+
+    /* brillo y pulso del botón verde */
+    .btn-yes::after{content:'';position:absolute;inset:0;border-radius:16px;box-shadow:0 0 24px rgba(60,200,120,0.18);opacity:0;transition:opacity .25s}
+    .btn-yes:hover::after{opacity:1}
+    .btn-yes.dance{animation:sway 1.6s infinite ease-in-out}
 
     @keyframes sway {
       0%{transform:translateY(0) rotate(0) scale(1)}
@@ -44,8 +50,8 @@
 
     .needles{position:absolute;inset:0;pointer-events:none}
     /* representamos agujas de tejer / ganchillos estilizados */
-    .needle{position:absolute;width:10px;height:46px;background:linear-gradient(180deg,#c59,#ffd);border-radius:6px;transform-origin:center top;box-shadow:0 4px 8px rgba(0,0,0,0.08)}
-    .needle::after{content:'';position:absolute;right:-6px;top:-6px;width:14px;height:14px;background:linear-gradient(180deg,#ffe4f0,#ffd6e6);border-radius:50%;}
+    .needle{position:absolute;width:18px;height:46px;pointer-events:none}
+    .needle svg{width:18px;height:46px;display:block}
 
     .controls{flex:0 0 30vh;display:flex;gap:12px;align-items:center;padding:12px;background:linear-gradient(180deg,#fff,#ffeef5);border-top:1px solid rgba(0,0,0,0.04)}
     .joystick{flex:1;height:100%;background:transparent;display:flex;align-items:center;justify-content:center}
@@ -67,14 +73,37 @@
   </head>
   <body>
     <div class="app">
+      <!-- SVG assets embebidos: yarn, needle, hook -->
+      <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">
+        <defs>
+          <symbol id="yarnBall" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="#ffd6e6" />
+            <path d="M15 60c10-20 35-35 65-30" stroke="#ffb6d1" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M20 35c12 6 28 8 45 4" stroke="#ffcbe0" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </symbol>
+          <symbol id="needleSymbol" viewBox="0 0 10 50">
+            <rect x="4" y="6" width="2" height="36" rx="1" fill="#c59" />
+            <ellipse cx="5" cy="4" rx="4" ry="3" fill="#ffd6e0" />
+            <path d="M2 44c2 2 6 2 8 0" stroke="#b07" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          </symbol>
+          <symbol id="hookSymbol" viewBox="0 0 24 24">
+            <path d="M6 3c4 0 5 4 5 6s-1 4-4 4" stroke="#b33" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="4" cy="18" r="2" fill="#ffd6e0" />
+          </symbol>
+        </defs>
+      </svg>
       <header class="title">¿Me amas?</header>
 
       <main class="scene" id="scene">
         <div class="question">¿Me amas?</div>
 
         <div class="button-area">
-          <button class="btn btn-yes" id="btnYes">Sí</button>
-          <button class="btn btn-no" id="btnNo">No</button>
+          <button class="btn btn-yes" id="btnYes"><span class="icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><use href="#yarnBall"></use></svg>
+            </span>Sí</button>
+          <button class="btn btn-no" id="btnNo"><span class="icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><use href="#hookSymbol"></use></svg>
+            </span>No</button>
         </div>
 
         <div id="player" class="player" aria-hidden="true"></div>
@@ -192,16 +221,18 @@
       }
 
       function spawnNeedleTowards(target){
-        const n = document.createElement('div'); n.className='needle';
+        // crear una aguja SVG usando el símbolo embebido
+        const wrapper = document.createElement('div'); wrapper.innerHTML = `<svg class="needle" viewBox="0 0 10 50" xmlns="http://www.w3.org/2000/svg"><use href="#needleSymbol"></use></svg>`;
+        const n = wrapper.firstChild;
         const r = btnNo.getBoundingClientRect();
         const startX = r.left + r.width/2 - sceneRect.left; const startY = r.top + r.height/2 - sceneRect.top;
-        n.style.left = `${startX}px`; n.style.top = `${startY}px`; needlesLayer.appendChild(n);
+        n.style.position = 'absolute'; n.style.left = `${startX}px`; n.style.top = `${startY}px`; needlesLayer.appendChild(n);
         const dx = target.x - startX; const dy = target.y - startY; const ang = Math.atan2(dy,dx)*180/Math.PI + 90;
-        n.style.transform = `rotate(${ang}deg)`;
+        n.style.transform = `translate(0px,0px) rotate(${ang}deg)`;
         n.animate([
           {transform:`translate(0px,0px) rotate(${ang}deg)`, opacity:1},
-          {transform:`translate(${dx}px, ${dy}px) rotate(${ang}deg)`, opacity:0.2}
-        ],{duration:600,easing:'ease-out'}).onfinish = ()=> n.remove();
+          {transform:`translate(${dx}px, ${dy}px) rotate(${ang}deg)`, opacity:0.15}
+        ],{duration:700,easing:'cubic-bezier(.2,.9,.2,1)'}).onfinish = ()=> n.remove();
       }
 
       function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }

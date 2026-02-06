@@ -40,4 +40,8 @@ Notas de diseño y accesibilidad
 
 ¿Quieres ajustes?
 - Puedo afinar la sensibilidad del joystick, cambiar paleta de colores, o generar una versión con assets (SVGs de ganchillos) si deseas mayor detalle visual.
+# Mejoras visuales añadidas en esta versión
+- SVGs embebidos para bola de hilo, aguja y ganchillo (sin recursos externos).
+- Agujas lanzadas renderizadas como SVG para mejor nitidez en móviles.
+- Estética reforzada: texturas tipo hilo, sombras y animaciones en botones.
 # fictional-garbanzo
