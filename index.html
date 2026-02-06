@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Me amas? — Juego Crochet</title>
+    <style>
+    :root{
+      --bg:#fff7f3;
+      --accent:#ff6b6b;
+      --green:#31d07b;
+      --shadow: rgba(0,0,0,0.12);
+      --yarn1:#fff1f6;
+      --yarn2:#ffe6ed;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body,#scene{height:100%}
+    body{font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,var(--bg),#fff);height:100vh}
+    .app{display:flex;flex-direction:column;height:100vh}
+    .title{padding:8px 12px;text-align:center;font-size:1.1rem;font-weight:600;color:#6b2b4a}
+
+    /* fondo con textura sutil tipo hilo */
+    .scene{flex:0 0 70vh;position:relative;overflow:hidden;border-top:1px solid rgba(0,0,0,0.04);background:
+      radial-gradient(circle at 10% 20%, rgba(255,230,240,0.9) 0px, transparent 12px),
+      radial-gradient(circle at 70% 60%, rgba(255,245,248,0.9) 0px, transparent 14px),
+      linear-gradient(180deg,var(--yarn1),var(--yarn2));
+      background-size: 120px 120px, 140px 140px, auto; }
+    .question{position:absolute;top:8px;left:12px;font-size:1.2rem;color:#7b3b4c}
+    .button-area{position:absolute;inset:60px 12px 12px 12px;display:flex;align-items:center;justify-content:space-around}
+    .btn{width:28vw;max-width:180px;height:12vh;border-radius:12px;border:none;font-size:1.8rem;color:white;box-shadow:0 8px 18px var(--shadow);touch-action:none}
+    .btn-yes{background:linear-gradient(135deg,#4ee28b,#17b16f);transform-origin:center;position:relative}
+    .btn-no{background:linear-gradient(135deg,#ff6b6b,#e04444);position:absolute}
+
+    @keyframes sway {
+      0%{transform:translateY(0) rotate(0) scale(1)}
+      25%{transform:translateY(-6px) rotate(-3deg) scale(1.03)}
+      50%{transform:translateY(0) rotate(3deg) scale(1.05)}
+      75%{transform:translateY(-4px) rotate(-2deg) scale(1.03)}
+      100%{transform:translateY(0) rotate(0) scale(1)}
+    }
+    .btn-yes.dance{animation:sway 1.6s infinite ease-in-out}
+
+    .player{position:absolute;width:40px;height:40px;border-radius:50%;background:linear-gradient(180deg,#ffd6e0,#ff9db7);border:3px solid #ff6b9a;box-shadow:0 6px 14px rgba(0,0,0,0.12);left:50%;top:70%;transform:translate(-50%,-50%)}
+
+    .needles{position:absolute;inset:0;pointer-events:none}
+    /* representamos agujas de tejer / ganchillos estilizados */
+    .needle{position:absolute;width:10px;height:46px;background:linear-gradient(180deg,#c59,#ffd);border-radius:6px;transform-origin:center top;box-shadow:0 4px 8px rgba(0,0,0,0.08)}
+    .needle::after{content:'';position:absolute;right:-6px;top:-6px;width:14px;height:14px;background:linear-gradient(180deg,#ffe4f0,#ffd6e6);border-radius:50%;}
+
+    .controls{flex:0 0 30vh;display:flex;gap:12px;align-items:center;padding:12px;background:linear-gradient(180deg,#fff,#ffeef5);border-top:1px solid rgba(0,0,0,0.04)}
+    .joystick{flex:1;height:100%;background:transparent;display:flex;align-items:center;justify-content:center}
+    .joystick{max-width:70%;}
+    .stick{width:90px;height:90px;border-radius:50%;background:linear-gradient(180deg,#fff,#ffeef5);border:6px solid #ffd6e0;box-shadow:0 10px 24px rgba(0,0,0,0.08);transform:translate(0,0)}
+    .ok{width:80px;height:48px;border-radius:10px;background:#6b2b4a;color:#fff;border:none;font-weight:700}
+
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);visibility:hidden;opacity:0;transition:opacity .18s}
+    .modal[aria-hidden="false"]{visibility:visible;opacity:1}
+    .modal-content{background:#fff;padding:20px;border-radius:12px;color:#6b2b4a;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .modal-content .heart{font-size:2rem}
+    .modal-close{margin-top:12px;background:#ffd6e0;border:none;padding:8px 12px;border-radius:8px}
+
+    @media (orientation:landscape){
+      .scene{flex-basis:70%}
+      .controls{flex-basis:30%}
+    }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="title">¿Me amas?</header>
+
+      <main class="scene" id="scene">
+        <div class="question">¿Me amas?</div>
+
+        <div class="button-area">
+          <button class="btn btn-yes" id="btnYes">Sí</button>
+          <button class="btn btn-no" id="btnNo">No</button>
+        </div>
+
+        <div id="player" class="player" aria-hidden="true"></div>
+        <div id="needles" class="needles"></div>
+      </main>
+
+      <footer class="controls">
+        <div class="joystick" id="joystick">
+          <div class="stick" id="stick"></div>
+        </div>
+        <button class="ok" id="okBtn">OK</button>
+      </footer>
+
+      <div class="modal" id="modal" aria-hidden="true">
+        <div class="modal-content" id="modalContent"></div>
+        <button class="modal-close" id="modalClose">Cerrar</button>
+      </div>
+    </div>
+
+    <script>
+    /* Lógica embebida: joystick, movimiento, interacción de botones */
+    document.addEventListener('DOMContentLoaded',()=>{
+      const scene = document.getElementById('scene');
+      const btnYes = document.getElementById('btnYes');
+      const btnNo = document.getElementById('btnNo');
+      const player = document.getElementById('player');
+      const needlesLayer = document.getElementById('needles');
+      const joystick = document.getElementById('joystick');
+      const stick = document.getElementById('stick');
+      const okBtn = document.getElementById('okBtn');
+      const modal = document.getElementById('modal');
+      const modalContent = document.getElementById('modalContent');
+      const modalClose = document.getElementById('modalClose');
+
+      let sceneRect = scene.getBoundingClientRect();
+      window.addEventListener('resize',()=>sceneRect = scene.getBoundingClientRect());
+
+      function placeInitial(){
+        sceneRect = scene.getBoundingClientRect();
+        const yesX = sceneRect.width*0.25 - 80;
+        const yesY = sceneRect.height*0.45;
+        const noX = sceneRect.width*0.75 - 40;
+        const noY = sceneRect.height*0.45;
+        btnYes.style.position='absolute';
+        btnYes.style.left = `${yesX}px`;
+        btnYes.style.top = `${yesY}px`;
+        btnNo.style.position='absolute';
+        btnNo.style.left = `${noX}px`;
+        btnNo.style.top = `${noY}px`;
+
+        btnYes.classList.add('dance');
+
+        // El botón rojo NO nunca puede ser tocado directamente
+        btnNo.style.pointerEvents = 'none';
+        btnNo.setAttribute('aria-disabled','true');
+      }
+      placeInitial();
+
+      let playerPos = {x: sceneRect.width/2, y: sceneRect.height*0.75};
+      function updatePlayer(){
+        player.style.left = `${playerPos.x}px`;
+        player.style.top = `${playerPos.y}px`;
+      }
+      updatePlayer();
+
+      let active = false; let origin = null;
+      joystick.addEventListener('pointerdown', (e)=>{ active = true; origin = {x:e.clientX, y:e.clientY}; joystick.setPointerCapture(e.pointerId); });
+      joystick.addEventListener('pointermove',(e)=>{
+        if(!active) return;
+        const dx = e.clientX - origin.x; const dy = e.clientY - origin.y;
+        const r = 40; const dist = Math.min(Math.hypot(dx,dy), r); const angle = Math.atan2(dy,dx);
+        const sx = Math.cos(angle)*dist; const sy = Math.sin(angle)*dist;
+        stick.style.transform = `translate(${sx}px, ${sy}px)`;
+        const moveScale = 0.08;
+        playerPos.x = clamp(playerPos.x + sx*moveScale, 30, sceneRect.width-30);
+        playerPos.y = clamp(playerPos.y + sy*moveScale, 30, sceneRect.height-30);
+        updatePlayer();
+        handleProximity();
+      });
+      joystick.addEventListener('pointerup',(e)=>{ active=false; origin=null; stick.style.transform='translate(0,0)'; });
+      joystick.addEventListener('pointercancel',(e)=>{ active=false; origin=null; stick.style.transform='translate(0,0)'; });
+
+      function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+      okBtn.addEventListener('click', ()=>{
+        if(distanceToElement(playerPos, btnYes) < 90){ showModal('wiii yo tambien te amo cerdita'); }
+        else if(distanceToElement(playerPos, btnNo) < 80){ makeNoReact(); }
+      });
+
+      // tocar el botón verde (pointer) también muestra el mensaje
+      // El mensaje aparece al tocar el botón verde
+      btnYes.addEventListener('click',(e)=>{ e.stopPropagation(); showModal('wiii yo tambien te amo cerdita'); });
+      btnYes.addEventListener('pointerdown',(e)=>{ e.stopPropagation(); showModal('wiii yo tambien te amo cerdita'); });
+
+      function distanceToElement(pos, el){
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width/2 - sceneRect.left;
+        const cy = r.top + r.height/2 - sceneRect.top;
+        return Math.hypot(pos.x - cx, pos.y - cy);
+      }
+
+      let noCooldown = false;
+      function makeNoReact(){
+        if(noCooldown) return; noCooldown = true;
+        const r = btnNo.getBoundingClientRect();
+        const cx = r.left + r.width/2 - sceneRect.left;
+        const cy = r.top + r.height/2 - sceneRect.top;
+        const vx = cx - playerPos.x; const vy = cy - playerPos.y; const len = Math.hypot(vx,vy)||1;
+        const nx = cx + (vx/len)*150 + rand(-60,60);
+        const ny = clamp(cy + (vy/len)*120 + rand(-40,40), 60, sceneRect.height-60);
+        btnNo.style.left = `${clamp(nx,40,sceneRect.width-120)}px`;
+        btnNo.style.top = `${ny}px`;
+        for(let i=0;i<3;i++){ setTimeout(()=>spawnNeedleTowards(playerPos), i*220); }
+        setTimeout(()=>{ noCooldown=false; }, 900);
+      }
+
+      function spawnNeedleTowards(target){
+        const n = document.createElement('div'); n.className='needle';
+        const r = btnNo.getBoundingClientRect();
+        const startX = r.left + r.width/2 - sceneRect.left; const startY = r.top + r.height/2 - sceneRect.top;
+        n.style.left = `${startX}px`; n.style.top = `${startY}px`; needlesLayer.appendChild(n);
+        const dx = target.x - startX; const dy = target.y - startY; const ang = Math.atan2(dy,dx)*180/Math.PI + 90;
+        n.style.transform = `rotate(${ang}deg)`;
+        n.animate([
+          {transform:`translate(0px,0px) rotate(${ang}deg)`, opacity:1},
+          {transform:`translate(${dx}px, ${dy}px) rotate(${ang}deg)`, opacity:0.2}
+        ],{duration:600,easing:'ease-out'}).onfinish = ()=> n.remove();
+      }
+
+      function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+      function handleProximity(){ const dNo = distanceToElement(playerPos, btnNo); if(dNo < 140){ makeNoReact(); } }
+
+      scene.addEventListener('pointerdown',(e)=>{
+        const px = e.clientX - sceneRect.left; const py = e.clientY - sceneRect.top;
+        const steps = 12; let i=0; const sx = (px - playerPos.x)/steps; const sy = (py - playerPos.y)/steps;
+        const intr = setInterval(()=>{ playerPos.x += sx; playerPos.y += sy; updatePlayer(); handleProximity(); i++; if(i>=steps) clearInterval(intr); },30);
+      });
+
+      function showModal(text){ modalContent.innerHTML = `<div class="heart">🧶</div><div>${text}</div>`; modal.setAttribute('aria-hidden','false'); }
+      modalClose.addEventListener('click', ()=> modal.setAttribute('aria-hidden','true'));
+
+      function recalc(){ sceneRect = scene.getBoundingClientRect(); placeInitial(); }
+      window.addEventListener('orientationchange', ()=> setTimeout(recalc,300));
+    });
+    </script>
+  </body>
+</html>
