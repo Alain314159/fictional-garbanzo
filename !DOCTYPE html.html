@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>¿Me Amas?</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Quicksand', 'Varela Round', Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Zona de Juego (70% superior) - Fondo crochet */
+        #gameZone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 182, 193, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 105, 180, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 228, 225, 0.6) 0%, transparent 70%),
+                linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 25%, #FFC0CB 50%, #FFB6C1 75%, #FF69B4 100%);
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        /* Patrón de crochet decorativo */
+        #gameZone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255, 105, 180, 0.1) 20px, rgba(255, 105, 180, 0.1) 22px),
+                repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255, 105, 180, 0.1) 20px, rgba(255, 105, 180, 0.1) 22px);
+            pointer-events: none;
+        }
+
+        /* Zona de Controles (30% inferior) - Madera/tabla de tejer */
+        #controlZone {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(180deg, #8B5A2B 0%, #6B4423 50%, #5D3A1A 100%);
+            z-index: 2;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 15px 20px;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Patrón de tabla de madera */
+        #controlZone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 8px,
+                rgba(0,0,0,0.1) 8px,
+                rgba(0,0,0,0.1) 10px
+            );
+            pointer-events: none;
+        }
+
+        /* Título estilo crochet */
+        #question {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Pacifico', cursive;
+            font-size: clamp(32px, 9vw, 48px);
+            color: #C71585;
+            text-shadow: 
+                3px 3px 0 #fff,
+                4px 4px 0 rgba(199, 21, 133, 0.3);
+            text-align: center;
+            z-index: 10;
+            animation: titleBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes titleBounce {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+
+        /* Botón SÍ - Ovillo de lana verde */
+        #yesBtn {
+            position: absolute;
+            width: 130px;
+            height: 60px;
+            background: linear-gradient(145deg, #90EE90, #32CD32, #228B22);
+            border: 4px solid #fff;
+            border-radius: 30px 30px 20px 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 20px rgba(50, 205, 50, 0.4),
+                inset 0 2px 10px rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            animation: normalDance 1s ease-in-out infinite;
+            overflow: visible;
+            transform-style: preserve-3d;
+        }
+
+        /* Textura de lana en el botón */
+        #yesBtn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 5px,
+                rgba(255,255,255,0.1) 5px,
+                rgba(255,255,255,0.1) 10px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Animación normal del botón verde */
+        @keyframes normalDance {
+            0%, 100% {
+                transform: translateY(0) rotate(-3deg);
+                box-shadow: 0 8px 20px rgba(50, 205, 50, 0.4);
+            }
+            25% {
+                transform: translateY(-8px) rotate(3deg);
+                box-shadow: 0 15px 30px rgba(50, 205, 50, 0.5);
+            }
+            50% {
+                transform: translateY(0) rotate(-2deg);
+                box-shadow: 0 8px 20px rgba(50, 205, 50, 0.4);
+            }
+            75% {
+                transform: translateY(-6px) rotate(2deg);
+                box-shadow: 0 12px 25px rgba(50, 205, 50, 0.45);
+            }
+        }
+
+        /* Tubo de strip tease - AHORA VISIBLE Y MEJORADO */
+        .stripPole {
+            position: absolute;
+            left: -55px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            height: 15px;
+            background: linear-gradient(90deg, #A9A9A9, #D3D3D3, #A9A9A9);
+            border-radius: 8px;
+            opacity: 1;
+            z-index: 1;
+            transform-origin: center center;
+            box-shadow: 
+                inset 0 2px 5px rgba(0,0,0,0.2),
+                0 0 10px rgba(255,255,255,0.3);
+            animation: poleGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes poleGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+            50% { box-shadow: 0 0 20px rgba(255,255,255,0.6); }
+        }
+
+        /* Base del tubo horizontal */
+        .stripPole::after {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 25px;
+            height: 40px;
+            background: linear-gradient(90deg, #696969, #808080, #696969);
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Tiers/capas que aparecen - AHORA LADOS IZQ/DER */
+        .stripTier {
+            position: absolute;
+            width: 50px;
+            height: 120px;
+            border-radius: 25px;
+            opacity: 0;
+            z-index: 4;
+            pointer-events: none;
+            filter: blur(5px);
+        }
+
+        .stripTier.left {
+            left: -75px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: radial-gradient(ellipse, rgba(255,182,193,0.9), transparent 70%);
+            animation: tierAppearHorizontal 0.5s ease-out forwards;
+        }
+
+        .stripTier.right {
+            right: -75px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: radial-gradient(ellipse, rgba(255,182,193,0.9), transparent 70%);
+            animation: tierAppearHorizontal 0.5s ease-out forwards;
+        }
+
+        @keyframes tierAppearHorizontal {
+            0% { opacity: 0; transform: translateY(-50%) scaleX(0.2) scaleY(0.8); }
+            70% { opacity: 0.9; transform: translateY(-50%) scaleX(1.1) scaleY(1.1); }
+            100% { opacity: 0.7; transform: translateY(-50%) scaleX(1) scaleY(1); }
+        }
+
+        /* Animación de strip tease - GIRAR HORIZONTALMENTE (3D) */
+        .stripTeaseActive {
+            animation: stripTeaseSpin3D 4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards !important;
+            transform-origin: center center;
+        }
+
+        @keyframes stripTeaseSpin3D {
+            0% {
+                transform: rotateY(0deg) translateX(0);
+            }
+            15% {
+                transform: rotateY(180deg) translateX(30px);
+            }
+            30% {
+                transform: rotateY(360deg) translateX(0);
+            }
+            45% {
+                transform: rotateY(540deg) translateX(-30px);
+            }
+            60% {
+                transform: rotateY(720deg) translateX(0);
+            }
+            75% {
+                transform: rotateY(900deg) translateX(20px);
+            }
+            90% {
+                transform: rotateY(1080deg) translateX(-20px);
+            }
+            100% {
+                transform: rotateY(1080deg) translateX(0);
+            }
+        }
+
+        /* Botón NO - Ovillo de lana roja */
+        #noBtn {
+            position: absolute;
+            width: 130px;
+            height: 60px;
+            background: linear-gradient(145deg, #FF6B6B, #FF4500, #DC143C);
+            border: 4px solid #fff;
+            border-radius: 30px 30px 20px 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 20px rgba(255, 69, 0, 0.4),
+                inset 0 2px 10px rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: left 0.3s ease-out, top 0.3s ease-out;
+        }
+
+        /* Textura de lana en el botón NO */
+        #noBtn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 5px,
+                rgba(255,255,255,0.1) 5px,
+                rgba(255,255,255,0.1) 10px
+            );
+            pointer-events: none;
+        }
+
+        /* Cursor de Cerdito 🐷 */
+        #cursor {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            font-size: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none;
+            filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.4));
+            transition: transform 0.08s ease-out;
+            animation: cursorWiggle 1s ease-in-out infinite;
+        }
+
+        @keyframes cursorWiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* Joystick - Ovillo de lana decorativo */
+        #joystickBase {
+            position: relative;
+            width: 85px;
+            height: 85px;
+            background: linear-gradient(145deg, #FFB6C1, #FF69B4);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 4px 15px rgba(255, 105, 180, 0.5),
+                inset 0 2px 5px rgba(255,255,255,0.5);
+        }
+
+        /* Patrón de ovillo en el joystick */
+        #joystickBase::before {
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px dashed rgba(255, 255, 255, 0.4);
+        }
+
+        #joystickStick {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #9370DB, #8A2BE2);
+            border-radius: 50%;
+            box-shadow: 
+                0 3px 10px rgba(138, 43, 226, 0.5),
+                inset 0 2px 5px rgba(255,255,255,0.4);
+            transition: transform 0.12s ease-out;
+        }
+
+        /* Botón OK - simple y limpio */
+        #okBtn {
+            width: 85px;
+            height: 85px;
+            background: linear-gradient(145deg, #C0C0C0, #A9A9A9);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #4B0082;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.4),
+                inset 0 2px 5px rgba(255,255,255,0.5);
+            position: relative;
+        }
+
+        #okBtn:active {
+            transform: scale(0.95);
+            background: linear-gradient(145deg, #A9A9A9, #808080);
+        }
+
+        /* Aguja de Tejer */
+        .needle {
+            position: absolute;
+            width: 6px;
+            height: 35px;
+            background: linear-gradient(90deg, #C0C0C0, #E8E8E8, #C0C0C0);
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 20;
+            transform-origin: center center;
+        }
+
+        .needle::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(145deg, #FFD700, #FFA500);
+            border-radius: 50%;
+        }
+
+        .needle::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #808080;
+            border-radius: 50%;
+        }
+
+        /* Zona de victoria */
+        #victoryScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(255, 182, 193, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(255, 105, 180, 0.8) 0%, transparent 50%),
+                linear-gradient(135deg, #FF69B4 0%, #FF1493 30%, #C71585 70%, #8B008B 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        /* Patrón de crochet en pantalla de victoria */
+        #victoryScreen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 25px, rgba(255,255,255,0.2) 25px, rgba(255,255,255,0.2) 27px),
+                repeating-linear-gradient(90deg, transparent, transparent 25px, rgba(255,255,255,0.2) 25px, rgba(255,255,255,0.2) 27px);
+        }
+
+        #victoryMessage {
+            font-family: 'Pacifico', cursive;
+            font-size: clamp(28px, 8vw, 52px);
+            color: white;
+            text-align: center;
+            text-shadow: 
+                4px 4px 0 #C71585,
+                6px 6px 10px rgba(0,0,0,0.3);
+            animation: victoryBounce 1.2s ease-out forwards;
+            z-index: 1002;
+            padding: 25px;
+            position: relative;
+        }
+
+        @keyframes victoryBounce {
+            0% {
+                transform: scale(0) rotate(-10deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(5deg);
+                opacity: 1;
+            }
+            70% {
+                transform: scale(0.95) rotate(-3deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* Confeti de Ovillos */
+        .confetti {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+            z-index: 1001;
+            animation: confettiFall linear forwards;
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-30px) rotate(0deg) scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Corazones flotantes */
+        .heart {
+            position: absolute;
+            font-size: 35px;
+            pointer-events: none;
+            z-index: 1001;
+            animation: heartFloat 3s ease-out forwards;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        @keyframes heartFloat {
+            0% {
+                transform: translateY(100vh) scale(0.3);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-60px) scale(1.3);
+                opacity: 0;
+            }
+        }
+
+        /* Flash effect */
+        #flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.2s ease-out;
+        }
+
+        /* Decoraciones de ovillos en el fondo */
+        .yarnBall {
+            position: absolute;
+            font-size: 50px;
+            opacity: 0.15;
+            pointer-events: none;
+            animation: yarnRotate 20s linear infinite;
+        }
+
+        @keyframes yarnRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animación de error cuando toca NO */
+        #noBtn.error {
+            animation: errorFlash 0.4s ease;
+        }
+
+        @keyframes errorFlash {
+            0%, 100% {
+                background: linear-gradient(145deg, #FF6B6B, #FF4500, #DC143C);
+            }
+            33% {
+                background: linear-gradient(145deg, #FFD700, #FFA500);
+            }
+            66% {
+                background: linear-gradient(145deg, #FF6B6B, #FF4500, #DC143C);
+            }
+        }
+
+        /* Efecto sparkle en victoria */
+        .sparkle {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            animation: sparkleFloat 2s ease-out forwards;
+            z-index: 1001;
+        }
+
+        @keyframes sparkleFloat {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Mensaje flotante - MEJORADO PARA REPARTIRSE POR LA PANTALLA */
+        .floatingMessage {
+            position: absolute;
+            font-family: 'Pacifico', cursive;
+            font-size: 28px;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+            animation: messageFloat 2.5s ease-out forwards;
+            z-index: 1002;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        @keyframes messageFloat {
+            0% {
+                transform: translateY(20px) scale(0.8);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+                transform: translateY(0) scale(1.1);
+            }
+            80% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.9);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameZone">
+        <!-- Decoraciones de ovillos -->
+        <div class="yarnBall" style="top: 5%; left: 5%;">🧶</div>
+        <div class="yarnBall" style="top: 15%; right: 8%;">🧵</div>
+        <div class="yarnBall" style="bottom: 20%; left: 10%;">🪡</div>
+        <div class="yarnBall" style="bottom: 10%; right: 5%;">🧶</div>
+        
+        <div id="question">¿Me amas?</div>
+        <button id="yesBtn">SÍ</button>
+        <button id="noBtn">NO</button>
+        <div id="cursor">🐷</div>
+    </div>
+    
+    <div id="controlZone">
+        <div id="joystickBase">
+            <div id="joystickStick"></div>
+        </div>
+        <button id="okBtn">OK</button>
+    </div>
+
+    <div id="victoryScreen">
+        <div id="victoryMessage">💕 WIIIII 💕<br>Yo te amo<br>cerdita 🐷</div>
+    </div>
+    
+    <div id="flash"></div>
+
+    <script>
+        // Elementos del DOM
+        const gameZone = document.getElementById('gameZone');
+        const controlZone = document.getElementById('controlZone');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const cursor = document.getElementById('cursor');
+        const joystickBase = document.getElementById('joystickBase');
+        const joystickStick = document.getElementById('joystickStick');
+        const okBtn = document.getElementById('okBtn');
+        const victoryScreen = document.getElementById('victoryScreen');
+        const victoryMessage = document.getElementById('victoryMessage');
+        const flash = document.getElementById('flash');
+        const question = document.getElementById('question');
+
+        // Variables de estado
+        let cursorX, cursorY;
+        let joystickActive = false;
+        let joystickStartX, joystickStartY;
+        let joystickCenterX, joystickCenterY;
+        let joystickVectorX = 0, joystickVectorY = 0;
+        let gameRunning = true;
+        let noBtnX, noBtnY;
+        let needleCooldown = false;
+        let isPoleDancing = false;
+        let stripTeaseTimeout = null;
+        let animationFrameId = null;
+        let activePoleDanceElements = [];
+
+        // Configuración
+        const CURSOR_SPEED = 5;
+        const NO_BTN_ESCAPE_DISTANCE = 100;
+        const BTN_WIDTH = 130;
+        const BTN_HEIGHT = 60;
+        const MAX_POLE_DANCE_INTERVAL = 40000;
+        const MIN_POLE_DANCE_INTERVAL = 10000;
+        const POLE_DANCE_DURATION = 4000;
+        const NEEDLE_COOLDOWN_TIME = 250;
+
+        // Pool de objetos para optimización
+        const needlePool = [];
+        const confettiPool = [];
+        const heartPool = [];
+        const sparklePool = [];
+
+        // Inicialización
+        function init() {
+            const gameRect = gameZone.getBoundingClientRect();
+            
+            // Posicionar botón SÍ
+            yesBtn.style.width = `${BTN_WIDTH}px`;
+            yesBtn.style.height = `${BTN_HEIGHT}px`;
+            yesBtn.style.left = `${gameRect.width * 0.12}px`;
+            yesBtn.style.top = `${gameRect.height * 0.55}px`;
+
+            // Posicionar botón NO junto al botón SÍ
+            const noBtnLeft = gameRect.width * 0.12 + BTN_WIDTH + 25;
+            const noBtnTop = gameRect.height * 0.55;
+            
+            noBtn.style.width = `${BTN_WIDTH}px`;
+            noBtn.style.height = `${BTN_HEIGHT}px`;
+            noBtn.style.left = `${noBtnLeft}px`;
+            noBtn.style.top = `${noBtnTop}px`;
+            noBtn.style.transform = 'none';
+            
+            // Guardar posición inicial del botón NO
+            noBtnX = noBtnLeft + BTN_WIDTH / 2;
+            noBtnY = noBtnTop + BTN_HEIGHT / 2;
+
+            // Posición inicial segura para el cursor
+            cursorX = gameRect.width * 0.5;
+            cursorY = gameRect.height * 0.28;
+            updateCursorPosition();
+
+            // Iniciar gestión de animación del botón SÍ
+            manageYesButtonAnimation();
+
+            // Iniciar loop de animación
+            gameLoop();
+        }
+
+        // Gestionar la animación del botón SÍ
+        function manageYesButtonAnimation() {
+            if (!gameRunning || isPoleDancing) return;
+            
+            // Limpiar timeout anterior si existe
+            if (stripTeaseTimeout) {
+                clearTimeout(stripTeaseTimeout);
+            }
+            
+            // Tiempo aleatorio entre 10 y 40 segundos
+            const randomInterval = Math.random() * 
+                (MAX_POLE_DANCE_INTERVAL - MIN_POLE_DANCE_INTERVAL) + 
+                MIN_POLE_DANCE_INTERVAL;
+            
+            stripTeaseTimeout = setTimeout(() => {
+                startPoleDance();
+            }, randomInterval);
+        }
+
+        // Iniciar animación de strip tease - TUBO VISIBLE Y GIRAR EN 3D
+        function startPoleDance() {
+            if (!gameRunning) return;
+            
+            isPoleDancing = true;
+            
+            // Limpiar elementos anteriores
+            cleanupPoleDanceElements();
+            
+            // Crear y añadir el tubo HORIZONTAL - AHORA VISIBLE
+            const pole = document.createElement('div');
+            pole.className = 'stripPole';
+            // El tubo ya es visible por CSS (opacity: 1)
+            yesBtn.appendChild(pole);
+            activePoleDanceElements.push(pole);
+            
+            // Crear tiers/capas a los lados
+            const leftTier = document.createElement('div');
+            leftTier.className = 'stripTier left';
+            yesBtn.appendChild(leftTier);
+            activePoleDanceElements.push(leftTier);
+            
+            const rightTier = document.createElement('div');
+            rightTier.className = 'stripTier right';
+            yesBtn.appendChild(rightTier);
+            activePoleDanceElements.push(rightTier);
+            
+            // Forzar reflow para que la animación funcione
+            void pole.offsetWidth;
+            
+            // Detener animación normal
+            yesBtn.style.animation = 'none';
+            
+            // Añadir clase de animación de strip tease
+            yesBtn.classList.add('stripTeaseActive');
+            
+            // Después de 4 segundos, volver al baile normal
+            setTimeout(() => {
+                if (!gameRunning) return;
+                
+                // Quitar clase de strip tease
+                yesBtn.classList.remove('stripTeaseActive');
+                
+                // Restaurar animación normal
+                yesBtn.style.animation = 'normalDance 1s ease-in-out infinite';
+                
+                // Limpiar elementos del strip tease
+                cleanupPoleDanceElements();
+                
+                isPoleDancing = false;
+                
+                // Programar la siguiente animación
+                manageYesButtonAnimation();
+            }, POLE_DANCE_DURATION);
+        }
+
+        // Limpiar elementos del pole dance
+        function cleanupPoleDanceElements() {
+            activePoleDanceElements.forEach(element => {
+                if (element && element.parentNode) {
+                    element.remove();
+                }
+            });
+            activePoleDanceElements = [];
+        }
+
+        // Actualizar posición visual del cursor
+        function updateCursorPosition() {
+            cursor.style.left = `${cursorX - 22}px`;
+            cursor.style.top = `${cursorY - 22}px`;
+        }
+
+        // Lógica del Joystick
+        function handleJoystickStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = joystickBase.getBoundingClientRect();
+            joystickCenterX = rect.left + rect.width / 2;
+            joystickCenterY = rect.top + rect.height / 2;
+            joystickStartX = touch.clientX;
+            joystickStartY = touch.clientY;
+            joystickActive = true;
+        }
+
+        function handleJoystickMove(e) {
+            if (!joystickActive || !gameRunning) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            let deltaX = touch.clientX - joystickStartX;
+            let deltaY = touch.clientY - joystickStartY;
+
+            // Limitar el movimiento del stick
+            const maxDistance = 38;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            if (distance > maxDistance) {
+                deltaX = (deltaX / distance) * maxDistance;
+                deltaY = (deltaY / distance) * maxDistance;
+            }
+
+            // Actualizar stick visual
+            joystickStick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+            // Normalizar vector
+            joystickVectorX = deltaX / maxDistance;
+            joystickVectorY = deltaY / maxDistance;
+        }
+
+        function handleJoystickEnd(e) {
+            e.preventDefault();
+            joystickActive = false;
+            joystickVectorX = 0;
+            joystickVectorY = 0;
+            joystickStick.style.transform = 'translate(0px, 0px)';
+        }
+
+        // Eventos del Joystick
+        joystickBase.addEventListener('touchstart', handleJoystickStart);
+        joystickBase.addEventListener('touchmove', handleJoystickMove);
+        joystickBase.addEventListener('touchend', handleJoystickEnd);
+
+        // Botón OK
+        okBtn.addEventListener('touchstart', handleOk);
+
+        function handleOk(e) {
+            e.preventDefault();
+            if (!gameRunning) return;
+
+            // Verificar colisión con botón SÍ usando posición relativa
+            if (checkCollisionWithYesBtn()) {
+                triggerVictory();
+                return;
+            }
+
+            // Verificar si tocó NO
+            if (checkCollisionWithNoBtn()) {
+                noBtn.classList.add('error');
+                setTimeout(() => noBtn.classList.remove('error'), 400);
+            }
+        }
+
+        // Verificar colisión con botón SÍ considerando animaciones
+        function checkCollisionWithYesBtn() {
+            // Obtener posición absoluta considerando transformaciones
+            const yesRect = yesBtn.getBoundingClientRect();
+            const gameRect = gameZone.getBoundingClientRect();
+            
+            // Convertir a coordenadas relativas al gameZone
+            const relativeLeft = yesRect.left - gameRect.left;
+            const relativeTop = yesRect.top - gameRect.top;
+            const relativeRight = yesRect.right - gameRect.left;
+            const relativeBottom = yesRect.bottom - gameRect.top;
+            
+            return (
+                cursorX >= relativeLeft &&
+                cursorX <= relativeRight &&
+                cursorY >= relativeTop &&
+                cursorY <= relativeBottom
+            );
+        }
+
+        // Verificar colisión con botón NO
+        function checkCollisionWithNoBtn() {
+            const noRect = noBtn.getBoundingClientRect();
+            const gameRect = gameZone.getBoundingClientRect();
+            
+            // Convertir a coordenadas relativas
+            const relativeLeft = noRect.left - gameRect.left;
+            const relativeTop = noRect.top - gameRect.top;
+            const relativeRight = noRect.right - gameRect.left;
+            const relativeBottom = noRect.bottom - gameRect.top;
+            
+            return (
+                cursorX >= relativeLeft - 15 &&
+                cursorX <= relativeRight + 15 &&
+                cursorY >= relativeTop - 15 &&
+                cursorY <= relativeBottom + 15
+            );
+        }
+
+        // Loop principal del juego
+        function gameLoop() {
+            if (!gameRunning) {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                return;
+            }
+
+            const gameRect = gameZone.getBoundingClientRect();
+            const maxX = gameRect.width;
+            const maxY = gameRect.height;
+
+            // Mover cursor con joystick
+            if (joystickActive) {
+                cursorX += joystickVectorX * CURSOR_SPEED;
+                cursorY += joystickVectorY * CURSOR_SPEED;
+
+                // Limitar cursor a zona de juego
+                cursorX = Math.max(22, Math.min(maxX - 22, cursorX));
+                cursorY = Math.max(22, Math.min(maxY - 25, cursorY));
+
+                updateCursorPosition();
+            }
+
+            // Mover botón NO
+            moveNoButton(gameRect);
+
+            // Programar siguiente frame
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Mover botón NO optimizado
+        function moveNoButton(gameRect) {
+            const btnWidth = BTN_WIDTH;
+            const btnHeight = BTN_HEIGHT;
+            const btnCenterX = noBtnX;
+            const btnCenterY = noBtnY;
+
+            // Calcular distancia al cursor
+            const dx = cursorX - btnCenterX;
+            const dy = cursorY - btnCenterY;
+            const distanceSquared = dx * dx + dy * dy;
+
+            // Si el cursor se acerca demasiado, huir
+            if (distanceSquared < NO_BTN_ESCAPE_DISTANCE * NO_BTN_ESCAPE_DISTANCE) {
+                // Guardar posición actual para disparar aguja
+                const oldX = btnCenterX;
+                const oldY = btnCenterY;
+
+                // Calcular nueva posición segura
+                const newPos = findSafePositionOptimized(gameRect, btnWidth, btnHeight);
+                
+                // Actualizar posición
+                noBtnX = newPos.x;
+                noBtnY = newPos.y;
+                
+                // Mover el botón
+                noBtn.style.left = `${newPos.x - btnWidth / 2}px`;
+                noBtn.style.top = `${newPos.y - btnHeight / 2}px`;
+
+                // Disparar aguja mientras huye
+                setTimeout(() => {
+                    shootNeedle(oldX, oldY);
+                }, 50);
+            }
+        }
+
+        // Encontrar posición segura OPTIMIZADA
+        function findSafePositionOptimized(gameRect, btnWidth, btnHeight) {
+            const yesRect = yesBtn.getBoundingClientRect();
+            const yesCenterX = yesRect.left - gameRect.left + yesRect.width / 2;
+            const yesCenterY = yesRect.top - gameRect.top + yesRect.height / 2;
+
+            // Posiciones candidatas predefinidas (esquinas y bordes)
+            const candidatePositions = [
+                { x: btnWidth/2 + 20, y: gameRect.height * 0.2 },
+                { x: gameRect.width - btnWidth/2 - 20, y: gameRect.height * 0.2 },
+                { x: btnWidth/2 + 20, y: gameRect.height * 0.8 },
+                { x: gameRect.width - btnWidth/2 - 20, y: gameRect.height * 0.8 },
+                { x: gameRect.width * 0.1, y: gameRect.height * 0.5 },
+                { x: gameRect.width * 0.9, y: gameRect.height * 0.5 },
+                { x: gameRect.width * 0.5, y: btnHeight/2 + 20 },
+                { x: gameRect.width * 0.5, y: gameRect.height - btnHeight/2 - 20 }
+            ];
+
+            let bestPos = candidatePositions[0];
+            let bestScore = -1;
+
+            // Evaluar solo posiciones candidatas
+            for (let i = 0; i < candidatePositions.length; i++) {
+                const pos = candidatePositions[i];
+                
+                // Calcular distancia al cursor (sin raíz cuadrada para optimizar)
+                const distCursorX = pos.x - cursorX;
+                const distCursorY = pos.y - cursorY;
+                const distCursorSquared = distCursorX * distCursorX + distCursorY * distCursorY;
+                
+                // Calcular distancia al botón SÍ
+                const distYesX = pos.x - yesCenterX;
+                const distYesY = pos.y - yesCenterY;
+                const distYesSquared = distYesX * distYesX + distYesY * distYesY;
+
+                // Puntuación combinada
+                const score = distCursorSquared + distYesSquared * 1.5;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestPos = pos;
+                }
+            }
+
+            return bestPos;
+        }
+
+        // Disparar aguja de tejer con pooling
+        function shootNeedle(startX, startY) {
+            if (needleCooldown) return;
+            needleCooldown = true;
+
+            let needle;
+            
+            // Reutilizar aguja del pool si existe
+            if (needlePool.length > 0) {
+                needle = needlePool.pop();
+                needle.style.display = 'block';
+            } else {
+                needle = document.createElement('div');
+                needle.className = 'needle';
+                gameZone.appendChild(needle);
+            }
+
+            needle.style.left = `${startX}px`;
+            needle.style.top = `${startY}px`;
+            needle.style.opacity = '1';
+
+            // Calcular ángulo hacia el cursor
+            const angle = Math.atan2(cursorY - startY, cursorX - startX) * (180 / Math.PI);
+            needle.style.transform = `rotate(${angle}deg)`;
+
+            // Animar aguja hacia el cursor
+            const duration = 350;
+            const startTime = performance.now();
+
+            function animateNeedle(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Ease out cubic
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                const currentX = startX + (cursorX - startX) * easeProgress;
+                const currentY = startY + (cursorY - startY) * easeProgress;
+
+                needle.style.left = `${currentX}px`;
+                needle.style.top = `${currentY}px`;
+                needle.style.opacity = 1 - progress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateNeedle);
+                } else {
+                    // Ocultar y devolver al pool
+                    needle.style.display = 'none';
+                    needlePool.push(needle);
+                }
+            }
+
+            requestAnimationFrame(animateNeedle);
+
+            // Cooldown
+            setTimeout(() => {
+                needleCooldown = false;
+            }, NEEDLE_COOLDOWN_TIME);
+        }
+
+        // Victoria
+        function triggerVictory() {
+            gameRunning = false;
+
+            // Limpiar timeouts y detener animaciones
+            cleanupAll();
+
+            // Flash effect
+            flash.style.opacity = '0.9';
+            setTimeout(() => {
+                flash.style.opacity = '0';
+            }, 200);
+
+            // Ocultar elementos del juego
+            yesBtn.style.display = 'none';
+            noBtn.style.display = 'none';
+            cursor.style.display = 'none';
+            controlZone.style.display = 'none';
+            question.style.display = 'none';
+
+            // Mostrar pantalla de victoria
+            victoryScreen.style.display = 'flex';
+
+            // Iniciar efectos de celebración
+            startConfetti();
+            startHearts();
+            startSparkles();
+
+            // Añadir mensajes flotantes REPARTIDOS POR TODA LA PANTALLA
+            const victoryMessages = [
+                '💕 TE AMO 💕',
+                '🐷 MI CERDITA 🐷',
+                '🧶 PARA SIEMPRE 🧶',
+                '💖 AMOR ETERNO 💖',
+                '😘 BESITOS 😘',
+                '🤗 ABRAZOS 🤗',
+                '💏 JUNTOS POR SIEMPRE 💏',
+                '🎉 CELEBREMOS 🎉',
+                '💝 ERES MI TODO 💝',
+                '🌈 MI ARCOÍRIS 🌈',
+                '☀️ MI SOL ☀️',
+                '🌙 MI LUNA 🌙',
+                '✨ MI ESTRELLA ✨',
+                '🌹 MI FLOR 🌹',
+                '🍭 MI DULZURA 🍭',
+                '🎀 MI TESORO 🎀'
+            ];
+            
+            // Mostrar mensajes en posiciones aleatorias por toda la pantalla
+            victoryMessages.forEach((message, index) => {
+                setTimeout(() => {
+                    addFloatingMessage(message);
+                }, 300 * (index + 1));
+            });
+        }
+
+        // Limpiar todo
+        function cleanupAll() {
+            if (stripTeaseTimeout) {
+                clearTimeout(stripTeaseTimeout);
+                stripTeaseTimeout = null;
+            }
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            cleanupPoleDanceElements();
+            
+            // Limpiar event listeners
+            joystickBase.removeEventListener('touchstart', handleJoystickStart);
+            joystickBase.removeEventListener('touchmove', handleJoystickMove);
+            joystickBase.removeEventListener('touchend', handleJoystickEnd);
+            okBtn.removeEventListener('touchstart', handleOk);
+        }
+
+        // Confeti elaborado de ovillos
+        function startConfetti() {
+            const colors = ['#FF69B4', '#FF1493', '#FF6B6B', '#FFD700', '#98FB98', '#DDA0DD', '#87CEEB', '#FFB6C1'];
+            const icons = ['🧶', '🧵', '💖', '❤️', '💕'];
+            
+            for (let i = 0; i < 80; i++) {
+                setTimeout(() => {
+                    createConfettiParticle(colors, icons);
+                }, i * 45);
+            }
+        }
+
+        function createConfettiParticle(colors, icons) {
+            const isIcon = Math.random() > 0.6;
+            let confetti;
+            
+            if (isIcon) {
+                // Reutilizar del pool si existe
+                if (confettiPool.length > 0) {
+                    confetti = confettiPool.pop();
+                    confetti.className = 'confetti';
+                } else {
+                    confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                }
+                
+                confetti.textContent = icons[Math.floor(Math.random() * icons.length)];
+                confetti.style.fontSize = `${20 + Math.random() * 15}px`;
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.width = 'auto';
+                confetti.style.height = 'auto';
+                confetti.style.backgroundColor = 'transparent';
+                confetti.style.borderRadius = '0';
+                victoryScreen.appendChild(confetti);
+            } else {
+                if (confettiPool.length > 0) {
+                    confetti = confettiPool.pop();
+                    confetti.className = 'confetti';
+                } else {
+                    confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                }
+                
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = `${2.5 + Math.random() * 2}s`;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+                confetti.style.width = `${10 + Math.random() * 10}px`;
+                confetti.style.height = confetti.style.width;
+                victoryScreen.appendChild(confetti);
+            }
+
+            const confettiRef = confetti;
+            setTimeout(() => {
+                if (confettiRef && confettiRef.parentNode) {
+                    confettiRef.remove();
+                    // Devolver al pool
+                    confettiPool.push(confettiRef);
+                }
+            }, 5000);
+        }
+
+        // Corazones flotantes con pooling
+        function startHearts() {
+            const heartEmojis = ['❤️', '💕', '💖', '💗', '💓', '💘', '💝', '💟'];
+            
+            for (let i = 0; i < 40; i++) {
+                setTimeout(() => {
+                    createHeart(heartEmojis);
+                }, i * 200);
+            }
+        }
+
+        function createHeart(emojis) {
+            let heart;
+            
+            // Reutilizar del pool
+            if (heartPool.length > 0) {
+                heart = heartPool.pop();
+                heart.className = 'heart';
+            } else {
+                heart = document.createElement('div');
+                heart.className = 'heart';
+            }
+            
+            heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            heart.style.left = `${5 + Math.random() * 90}%`;
+            heart.style.fontSize = `${25 + Math.random() * 25}px`;
+            heart.style.animationDuration = `${2.5 + Math.random() * 1.5}s`;
+            
+            victoryScreen.appendChild(heart);
+
+            const heartRef = heart;
+            setTimeout(() => {
+                if (heartRef && heartRef.parentNode) {
+                    heartRef.remove();
+                    heartPool.push(heartRef);
+                }
+            }, 4000);
+        }
+
+        // Sparkles decorativos con pooling
+        function startSparkles() {
+            const sparkles = ['✨', '⭐', '💫', '🌟'];
+            
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    let sparkle;
+                    
+                    if (sparklePool.length > 0) {
+                        sparkle = sparklePool.pop();
+                        sparkle.className = 'sparkle';
+                    } else {
+                        sparkle = document.createElement('div');
+                        sparkle.className = 'sparkle';
+                    }
+                    
+                    sparkle.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
+                    sparkle.style.left = `${10 + Math.random() * 80}%`;
+                    sparkle.style.top = `${20 + Math.random() * 60}%`;
+                    sparkle.style.fontSize = `${18 + Math.random() * 15}px`;
+                    victoryScreen.appendChild(sparkle);
+                    
+                    const sparkleRef = sparkle;
+                    setTimeout(() => {
+                        if (sparkleRef && sparkleRef.parentNode) {
+                            sparkleRef.remove();
+                            sparklePool.push(sparkleRef);
+                        }
+                    }, 2000);
+                }, i * 150);
+            }
+        }
+
+        // Mensajes flotantes REPARTIDOS POR TODA LA PANTALLA
+        function addFloatingMessage(text) {
+            const msg = document.createElement('div');
+            msg.className = 'floatingMessage';
+            msg.textContent = text;
+            
+            // Distribuir por toda la pantalla - no solo en el centro
+            // Horizontal: 5% a 95%
+            // Vertical: 10% a 90%
+            msg.style.left = `${5 + Math.random() * 90}%`;
+            msg.style.top = `${10 + Math.random() * 80}%`;
+            
+            // Tamaño aleatorio para variedad
+            msg.style.fontSize = `${24 + Math.random() * 12}px`;
+            
+            // Color ligeramente variado
+            const hue = 330 + Math.random() * 30; // Rosa/rojo variado
+            msg.style.color = `hsl(${hue}, 100%, 80%)`;
+            
+            // Duración de animación aleatoria
+            msg.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+            
+            victoryScreen.appendChild(msg);
+
+            setTimeout(() => {
+                if (msg && msg.parentNode) {
+                    msg.remove();
+                }
+            }, 3500);
+        }
+
+        // Iniciar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Cleanup al cerrar la página
+        window.addEventListener('beforeunload', cleanupAll);
+        window.addEventListener('pagehide', cleanupAll);
+
+        // Prevenir scroll en toda la página
+        document.body.addEventListener('touchmove', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Añadir efecto táctil a botones
+        yesBtn.addEventListener('touchstart', () => {
+            yesBtn.style.transform = 'scale(0.95)';
+        });
+        
+        yesBtn.addEventListener('touchend', () => {
+            yesBtn.style.transform = '';
+        });
+        
+        noBtn.addEventListener('touchstart', () => {
+            noBtn.style.transform = 'scale(0.95)';
+        });
+        
+        noBtn.addEventListener('touchend', () => {
+            noBtn.style.transform = '';
+        });
+    </script>
+</body>
+</html>
