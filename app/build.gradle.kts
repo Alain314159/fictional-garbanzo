@@ -107,6 +107,9 @@ dependencies {
 
     // Nostr SDK - Rhodium
     implementation(libs.rhodium)
+    
+    // Bech32 para npub/nsec
+    implementation(libs.bech32)
 
     // Cryptography
     implementation(libs.tink.android)

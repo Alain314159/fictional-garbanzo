@@ -17,6 +17,7 @@ serialization = "1.7.3"
 rhodium = "1.0-beta-19"
 tink = "1.15.0"
 libsodium = "1.0.18"
+bech32 = "0.0.1"
 okhttp = "4.12.0"
 coil = "3.0.4"
 junit = "4.13.2"
@@ -68,6 +69,9 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 
 # Nostr SDK
 rhodium = { group = "com.github.KotlinGeekDev.Rhodium", name = "rhodium-android", version.ref = "rhodium" }
+
+# Bech32 (npub/nsec encoding)
+bech32 = { group = "com.github.bitcoinj", name = "bitcoinj-core", version.ref = "bech32" }
 
 # Cryptography
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }

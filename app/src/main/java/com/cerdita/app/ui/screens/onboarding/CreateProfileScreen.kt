@@ -9,8 +9,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.cerdita.app.domain.model.AvatarType
 import com.cerdita.app.ui.theme.PiggyPink
+import kotlinx.coroutines.launch
 
 /**
  * 🐷 Create Profile Screen - Cerdita
@@ -22,9 +24,27 @@ fun CreateProfileScreen(
     onProfileCreated: () -> Unit,
     onBack: () -> Unit
 ) {
+    val viewModel: CreateProfileViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    
+    // Escuchar eventos
+    LaunchedEffect(state) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is CreateProfileEvent.ProfileCreatedSuccessfully -> {
+                    onProfileCreated()
+                }
+                is CreateProfileEvent.ProfileCreationFailed -> {
+                    // Mostrar error
+                }
+                null -> {}
+            }
+        }
+    }
+    
     var username by remember { mutableStateOf("") }
     var selectedAvatar by remember { mutableStateOf(AvatarType.PIGGY) }
-    var isCreating by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -115,7 +135,7 @@ fun CreateProfileScreen(
                     isSelected = selectedAvatar == AvatarType.KOALA,
                     onClick = { selectedAvatar = AvatarType.KOALA }
                 )
-            }
+            )
             
             Spacer(modifier = Modifier.weight(1f))
             
@@ -147,12 +167,12 @@ fun CreateProfileScreen(
             // Botón Crear Perfil
             Button(
                 onClick = {
-                    isCreating = true
-                    // TODO: Generar claves Nostr aquí
-                    // Por ahora, simulamos la creación
-                    onProfileCreated()
+                    viewModel.createProfile(
+                        displayName = username,
+                        avatarType = selectedAvatar
+                    )
                 },
-                enabled = username.isNotBlank() && !isCreating,
+                enabled = username.isNotBlank() && !state.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -160,13 +180,66 @@ fun CreateProfileScreen(
                     containerColor = PiggyPink
                 )
             ) {
-                if (isCreating) {
+                if (state.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Creando perfil...")
                 } else {
                     Text("✨ Crear Perfil")
+                }
+            }
+            
+            // Mostrar clave pública si fue creada
+            if (state.profileCreated && state.generatedKeyPair != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = PiggyPink.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "✅ ¡Perfil creado!",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PiggyPink
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Tu clave pública:",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        Text(
+                            text = state.generatedKeyPair!!.getShortNpub(),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                        )
+                    }
+                }
+            }
+            
+            // Mostrar error si existe
+            state.error?.let { error ->
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "❌ $error",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
             }
         }
