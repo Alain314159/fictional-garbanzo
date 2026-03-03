@@ -1,0 +1,207 @@
+name: 🚀 BUILD APK - ¡OBLIGATORIO!
+
+on:
+  push:
+    branches: [ "**" ]  # TODOS los branches
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:  # Ejecución manual
+
+# Cancelar builds anteriores si hay uno nuevo
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    name: 🏗️ GENERAR APK
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: 🔧 Setup Gradle
+      uses: gradle/gradle-build-action@v3
+      
+    - name: 📝 Obtener información del commit
+      id: commit
+      run: |
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "message=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+        echo "author=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
+        echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+        echo "date=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+        
+    - name: 🏗️ BUILD APK DEBUG
+      run: |
+        echo "========================================="
+        echo "🐷 CONSTRUYENDO CERDITA APK..."
+        echo "========================================="
+        chmod +x gradlew
+        ./gradlew clean assembleDebug --stacktrace
+        echo "========================================="
+        echo "✅ ¡BUILD COMPLETADO!"
+        echo "========================================="
+        
+    - name: 📦 Verificar APK generado
+      run: |
+        echo "🔍 Buscando APK..."
+        find . -name "*.apk" -type f
+        echo "========================================="
+        ls -lh app/build/outputs/apk/debug/
+        echo "========================================="
+        
+    - name: 📊 Generar información del build
+      run: |
+        echo "📱 INFORMACIÓN DEL BUILD" > build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "🐷 App: Cerdita" >> build-info.txt
+        echo "📅 Fecha: ${{ steps.commit.outputs.date }}" >> build-info.txt
+        echo "🌿 Branch: ${{ steps.commit.outputs.branch }}" >> build-info.txt
+        echo "💻 Commit: ${{ steps.commit.outputs.sha_short }}" >> build-info.txt
+        echo "📝 Mensaje: ${{ steps.commit.outputs.message }}" >> build-info.txt
+        echo "👤 Autor: ${{ steps.commit.outputs.author }}" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "📥 DESCARGA EL APK ADJUNTO" >> build-info.txt
+        cat build-info.txt
+        
+    - name: 📤 SUBIR APK (ARTIFACT)
+      uses: actions/upload-artifact@v4
+      with:
+        name: 🐷 CERDITA-APK-${{ steps.commit.outputs.sha_short }}
+        path: |
+          app/build/outputs/apk/debug/app-debug.apk
+          build-info.txt
+        retention-days: 30
+        if-no-files-found: error
+        
+    - name: ✅ Notificar éxito
+      if: success()
+      run: |
+        echo "========================================="
+        echo "✅ ¡APK GENERADO EXITOSAMENTE!"
+        echo "========================================="
+        echo "🐷 App: Cerdita"
+        echo "📅 Build: ${{ steps.commit.outputs.date }}"
+        echo "🌿 Branch: ${{ steps.commit.outputs.branch }}"
+        echo "💻 Commit: ${{ steps.commit.outputs.sha_short }}"
+        echo "========================================="
+        echo "📦 El APK está disponible en los artifacts"
+        echo "========================================="
+        
+    - name: ❌ Notificar fallo
+      if: failure()
+      run: |
+        echo "========================================="
+        echo "❌ ¡BUILD FALLÓ!"
+        echo "========================================="
+        echo "🐷 App: Cerdita"
+        echo "📅 Build: ${{ steps.commit.outputs.date }}"
+        echo "🌿 Branch: ${{ steps.commit.outputs.branch }}"
+        echo "💻 Commit: ${{ steps.commit.outputs.sha_short }}"
+        echo "========================================="
+        echo "🔍 Revisa los logs para ver el error"
+        echo "========================================="
+        exit 1
+
+  auto-release:
+    name: 🎯 Auto Release (si es main)
+    needs: build-apk
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 🟢 Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: 🏗️ Build Debug APK
+      run: |
+        chmod +x gradlew
+        ./gradlew clean assembleDebug
+        
+    - name: 📊 Obtener versión
+      id: version
+      run: |
+        VERSION_NAME=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts || echo "0.1.0")
+        VERSION_CODE=$(grep -oP 'versionCode = \K\d+' app/build.gradle.kts || echo "1")
+        echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
+        echo "code=$VERSION_CODE" >> $GITHUB_OUTPUT
+        
+    - name: 📊 Contar commits desde último release
+      id: commits
+      run: |
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          echo "count=$(git rev-list --count HEAD)" >> $GITHUB_OUTPUT
+        else
+          echo "count=$(git rev-list --count $LAST_TAG..HEAD)" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: 📝 Generar changelog
+      id: changelog
+      run: |
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          git log --pretty=format:"- %s" > changelog.txt
+        else
+          git log $LAST_TAG..HEAD --pretty=format:"- %s" > changelog.txt
+        fi
+        CHANGELOG=$(cat changelog.txt)
+        echo "log<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: 🎯 Crear/Actualizar Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.name }}-${{ github.run_number }}
+        name: "🐷 Cerdita v${{ steps.version.outputs.name }} (Build ${{ github.run_number }})"
+        body: |
+          ## 🐷 Cerdita - La App de Chat Más Romántica 💕
+          
+          ### 📊 Información del Build
+          - **Versión:** ${{ steps.version.outputs.name }}
+          - **Build Number:** ${{ github.run_number }}
+          - **Commits desde último release:** ${{ steps.commits.outputs.count }}
+          - **Fecha:** $(date '+%Y-%m-%d %H:%M:%S')
+          
+          ### 📝 Cambios
+          ${{ steps.changelog.outputs.log }}
+          
+          ### 📦 Descarga
+          - [⬇️ Descargar APK](link-to-apk)
+          
+          ---
+          **Hecho con amor** 💕 🐷🤗🐨
+        files: |
+          app/build/outputs/apk/debug/app-debug.apk
+        draft: false
+        prerelease: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: ✅ Release creado
+      run: |
+        echo "========================================="
+        echo "🎉 ¡RELEASE AUTOMÁTICO CREADO!"
+        echo "========================================="
+        echo "🐷 Cerdita v${{ steps.version.outputs.name }}"
+        echo "📦 Build: ${{ github.run_number }}"
+        echo "========================================="

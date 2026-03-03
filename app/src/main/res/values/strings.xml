@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cerdita 💕</string>
+    
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="delete">Eliminar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="loading">Cargando…</string>
+    <string name="error">Error</string>
+    <string name="retry">Reintentar</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Bienvenido a Cerdita 💕</string>
+    <string name="onboarding_welcome_subtitle">La app de chat más romántica 🐷🤗🐨</string>
+    <string name="onboarding_create_account">Crear Perfil</string>
+    <string name="onboarding_import_account">Importar Perfil</string>
+    <string name="onboarding_privacy_note">Tus claves nunca salen de tu dispositivo</string>
+    
+    <!-- Perfil -->
+    <string name="profile_username">Nombre de usuario</string>
+    <string name="profile_choose_avatar">Elige tu avatar:</string>
+    <string name="avatar_piggy">Cerdita 🐷</string>
+    <string name="avatar_koala">Koalita 🐨</string>
+    <string name="avatar_photo">Subir foto</string>
+    <string name="create_profile_button">✨ Crear Perfil</string>
+    <string name="profile_created">¡Perfil creado con éxito!</string>
+    
+    <!-- Chat -->
+    <string name="chat_list_title">Chats</string>
+    <string name="chat_list_empty">💬 No hay chats todavía</string>
+    <string name="chat_list_empty_subtitle">Inicia una conversación</string>
+    <string name="chat_detail_type_message">Escribe un mensaje…</string>
+    <string name="chat_detail_send">Enviar</string>
+    <string name="chat_detail_encrypted">🔒 Encriptado de extremo a extremo</string>
+    
+    <!-- Contactos -->
+    <string name="contacts_title">Contactos</string>
+    <string name="contacts_add">Añadir Contacto</string>
+    <string name="contacts_empty">👥 No hay contactos</string>
+    <string name="contacts_search_hint">npub o NIP-05</string>
+    
+    <!-- Ajustes -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_profile">Perfil</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_privacy">Privacidad</string>
+    <string name="settings_notifications">Notificaciones</string>
+    <string name="settings_about">Acerca de</string>
+    
+    <!-- Temas -->
+    <string name="theme_piggy">🐷 Cerdita</string>
+    <string name="theme_koala">🐨 Koalita</string>
+    <string name="theme_floral">🌸 Floral</string>
+    <string name="theme_mix">🐷🐨 Mix</string>
+    
+    <!-- Errores -->
+    <string name="error_network">Error de red</string>
+    <string name="error_invalid_key">Clave inválida</string>
+</resources>

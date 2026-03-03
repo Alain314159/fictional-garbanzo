@@ -1,0 +1,85 @@
+name: 📦 Release APK
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-release:
+    name: 🛠️ Build Release APK
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout del código
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Configurar JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: 🔧 Dar permisos a Gradle
+      run: chmod +x gradlew
+      
+    - name: 🔐 Configurar Keystore
+      env:
+        KEYSTORE_B64: ${{ secrets.KEYSTORE }}
+      run: |
+        echo $KEYSTORE_B64 | base64 -d > app/cerdita.keystore
+        echo "key.store=cerdita.keystore" >> gradle.properties
+        echo "key.store.password=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
+        echo "key.alias=${{ secrets.KEY_ALIAS }}" >> gradle.properties
+        echo "key.alias.password=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
+        
+    - name: 🏗️ Compilar Release
+      run: ./gradlew assembleRelease
+      
+    - name: ✅ Verificar que el APK se creó
+      run: |
+        ls -lh app/build/outputs/apk/release/
+        if [ ! -f app/build/outputs/apk/release/app-release.apk ]; then
+          echo "❌ El APK de release no se generó"
+          exit 1
+        fi
+        
+    - name: 📊 Generar SHA-256 del APK
+      run: sha256sum app/build/outputs/apk/release/app-release.apk > app/build/outputs/apk/release/SHA256.txt
+      
+    - name: 📦 Subir APK al Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          app/build/outputs/apk/release/app-release.apk
+          app/build/outputs/apk/release/SHA256.txt
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: 📝 Crear Changelog desde Git
+      run: |
+        git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"- %s" > CHANGELOG.md
+        cat CHANGELOG.md
+        
+    - name: 🎉 Notificar Release Exitoso
+      run: |
+        echo "✅ Release generado exitosamente!"
+        echo "📦 APK: app-release.apk"
+        echo "🔐 SHA256: $(cat app/build/outputs/apk/release/SHA256.txt)"
+        
+  notify:
+    name: 💬 Notify Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📢 Crear comentario en el release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.repos.createRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag_name: context.ref,
+            name: 'Cerdita 💕 Release',
+            body: '## 🐷 Nueva versión de Cerdita!\n\n### 📦 Descargas\n- [APK Release](link-to-apk)\n- [SHA256](link-to-sha256)\n\n### 🎉 Gracias por usar Cerdita!\n\nHecho con amor 💕'
+          })

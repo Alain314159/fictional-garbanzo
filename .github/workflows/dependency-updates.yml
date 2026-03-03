@@ -1,0 +1,71 @@
+name: 🔄 Dependency Updates
+
+on:
+  schedule:
+    # Todos los lunes a las 9:00 AM UTC
+    - cron: '0 9 * * MON'
+  workflow_dispatch: # Permitir ejecución manual
+
+jobs:
+  dependency-check:
+    name: 🔍 Check Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout del código
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Configurar JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: 🔧 Dar permisos a Gradle
+      run: chmod +x gradlew
+      
+    - name: 📊 Verificar actualizaciones de dependencias
+      run: ./gradlew dependencyUpdates -Drevision=release
+      
+    - name: 📄 Leer reporte de actualizaciones
+      id: updates
+      run: |
+        if [ -f build/dependencyUpdates/report.txt ]; then
+          echo "report=$(cat build/dependencyUpdates/report.txt)" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: 📝 Crear/Actualizar Issue con actualizaciones
+      uses: peter-evans/create-issue-from-file@v4
+      with:
+        title: 🔄 Actualizaciones de Dependencias Disponibles
+        content-filepath: build/dependencyUpdates/report.txt
+        labels: dependencies,enhancement
+        
+  security-check:
+    name: 🔒 Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout del código
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Configurar JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: 🔧 Dar permisos a Gradle
+      run: chmod +x gradlew
+      
+    - name: 🔍 Verificar vulnerabilidades en dependencias
+      run: ./gradlew dependencyCheckAnalyze
+      
+    - name: 📄 Subir reporte de seguridad
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: build/reports/dependency-check-report.html

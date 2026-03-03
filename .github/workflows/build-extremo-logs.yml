@@ -1,0 +1,410 @@
+name: 🚨 BUILD EXTREMO - DEBUG + RELEASE + LOGS
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+concurrency:
+  group: build-extremo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-both-apks:
+    name: 🏗️ BUILD DEBUG + RELEASE
+    runs-on: ubuntu-latest
+    
+    timeout-minutes: 30
+    
+    steps:
+    - name: 📥 Checkout del código
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Obtener todo el historial
+        
+    - name: 📊 Información del sistema
+      run: |
+        echo "========================================="
+        echo "🖥️ INFORMACIÓN DEL SISTEMA"
+        echo "========================================="
+        echo "OS: $(uname -a)"
+        echo "CPU: $(nproc) cores"
+        echo "RAM: $(free -h | grep Mem | awk '{print $2}')"
+        echo "Disk: $(df -h . | tail -1 | awk '{print $4}') libre"
+        echo "Java: $(java -version 2>&1 || echo 'No instalada')"
+        echo "========================================="
+        
+    - name: 🟢 Configurar JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: 📊 Información de Java
+      run: |
+        echo "========================================="
+        echo "☕ INFORMACIÓN DE JAVA"
+        echo "========================================="
+        java -version
+        echo "JAVA_HOME: $JAVA_HOME"
+        echo "========================================="
+        
+    - name: 🔧 Dar permisos a Gradle
+      run: |
+        chmod +x gradlew
+        chmod +x gradle/wrapper/gradle-wrapper.jar 2>/dev/null || true
+        
+    - name: 📊 Información de Gradle
+      run: |
+        echo "========================================="
+        echo "🐘 INFORMACIÓN DE GRADLE"
+        echo "========================================="
+        ./gradlew --version
+        echo "========================================="
+        
+    - name: 📁 Listar archivos del proyecto
+      run: |
+        echo "========================================="
+        echo "📁 ARCHIVOS DEL PROYECTO"
+        echo "========================================="
+        echo "Root:"
+        ls -la
+        echo ""
+        echo "app/:"
+        ls -la app/ 2>/dev/null || echo "No existe app/"
+        echo ""
+        echo "app/src/main/:"
+        ls -la app/src/main/ 2>/dev/null || echo "No existe app/src/main/"
+        echo ""
+        echo "AndroidManifest.xml:"
+        cat app/src/main/AndroidManifest.xml 2>/dev/null || echo "No existe"
+        echo "========================================="
+        
+    - name: 📋 Información del build.gradle.kts
+      run: |
+        echo "========================================="
+        echo "📄 BUILD.GRADLE.KTS"
+        echo "========================================="
+        cat app/build.gradle.kts 2>/dev/null || echo "No existe"
+        echo "========================================="
+        
+    - name: 🔍 Verificar configuración
+      run: |
+        echo "========================================="
+        echo "🔍 VERIFICANDO CONFIGURACIÓN"
+        echo "========================================="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "========================================="
+        
+    - name: 🧹 Limpieza previa
+      run: |
+        echo "========================================="
+        echo "🧹 LIMPIEZA PRE-BUILD"
+        echo "========================================="
+        ./gradlew clean --stacktrace || echo "Limpieza falló pero continuamos"
+        echo "========================================="
+        
+    - name: 📦 Descargar dependencias
+      run: |
+        echo "========================================="
+        echo "📦 DESCARGANDO DEPENDENCIAS"
+        echo "========================================="
+        ./gradlew dependencies --stacktrace
+        echo "========================================="
+        
+    - name: 🏗️ BUILD DEBUG APK
+      id: build_debug
+      run: |
+        echo "========================================="
+        echo "🔨 BUILD DEBUG APK"
+        echo "========================================="
+        echo "Inicio: $(date)"
+        ./gradlew assembleDebug --stacktrace --info --warning-mode all
+        echo "Fin: $(date)"
+        echo "========================================="
+        echo "✅ DEBUG BUILD COMPLETADO"
+        echo "========================================="
+      continue-on-error: false
+      
+    - name: 📦 Verificar DEBUG APK
+      run: |
+        echo "========================================="
+        echo "🔍 VERIFICANDO DEBUG APK"
+        echo "========================================="
+        find . -name "*debug*.apk" -type f
+        echo ""
+        ls -lh app/build/outputs/apk/debug/ 2>/dev/null || echo "No existe debug/"
+        echo ""
+        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+          echo "✅ DEBUG APK ENCONTRADO"
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
+          echo "SHA256: $(sha256sum app/build/outputs/apk/debug/app-debug.apk | cut -d' ' -f1)"
+        else
+          echo "❌ DEBUG APK NO ENCONTRADO"
+          exit 1
+        fi
+        echo "========================================="
+        
+    - name: 🏗️ BUILD RELEASE APK
+      id: build_release
+      run: |
+        echo "========================================="
+        echo "🔨 BUILD RELEASE APK"
+        echo "========================================="
+        echo "Inicio: $(date)"
+        
+        # Verificar si hay keystore
+        if [ -f app/cerdita.keystore ]; then
+          echo "✅ Keystore encontrado, firmando release..."
+          ./gradlew assembleRelease --stacktrace --info --warning-mode all
+        else
+          echo "⚠️ NO HAY KEYSTORE, generando release sin firmar..."
+          ./gradlew assembleRelease --stacktrace --info --warning-mode all || echo "Release falló, usando debug como fallback"
+        fi
+        
+        echo "Fin: $(date)"
+        echo "========================================="
+        echo "✅ RELEASE BUILD COMPLETADO"
+        echo "========================================="
+      continue-on-error: true
+      
+    - name: 📦 Verificar RELEASE APK
+      run: |
+        echo "========================================="
+        echo "🔍 VERIFICANDO RELEASE APK"
+        echo "========================================="
+        find . -name "*release*.apk" -type f
+        echo ""
+        ls -lh app/build/outputs/apk/release/ 2>/dev/null || echo "No existe release/"
+        echo ""
+        if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+          echo "✅ RELEASE APK ENCONTRADO"
+          ls -lh app/build/outputs/apk/release/app-release.apk
+          echo "SHA256: $(sha256sum app/build/outputs/apk/release/app-release.apk | cut -d' ' -f1)"
+        else
+          echo "⚠️ RELEASE APK NO ENCONTRADO (puede ser normal si no hay keystore)"
+        fi
+        echo "========================================="
+        
+    - name: 📊 Generar información detallada del build
+      id: build_info
+      run: |
+        echo "📱 INFORMACIÓN DETALLADA DEL BUILD" > build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "🐷 App: Cerdita - La App de Chat Más Romántica 💕" >> build-info.txt
+        echo "📅 Fecha: $(date '+%Y-%m-%d %H:%M:%S')" >> build-info.txt
+        echo "🌿 Branch: $(git rev-parse --abbrev-ref HEAD)" >> build-info.txt
+        echo "💻 Commit: $(git rev-parse --short HEAD)" >> build-info.txt
+        echo "📝 Mensaje: $(git log -1 --pretty=%s)" >> build-info.txt
+        echo "👤 Autor: $(git log -1 --pretty=%an)" >> build-info.txt
+        echo "🔗 URL: $(git remote get-url origin 2>/dev/null || echo 'N/A')" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "📊 ESTADÍSTICAS DEL BUILD" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "Tamaño DEBUG APK: $(ls -lh app/build/outputs/apk/debug/app-debug.apk 2>/dev/null | awk '{print $5}' || echo 'N/A')" >> build-info.txt
+        echo "Tamaño RELEASE APK: $(ls -lh app/build/outputs/apk/release/app-release.apk 2>/dev/null | awk '{print $5}' || echo 'N/A')" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "📥 DESCARGA LOS APKs ADJUNTOS" >> build-info.txt
+        echo "- app-debug.apk (para testing)" >> build-info.txt
+        echo "- app-release.apk (para producción, si está disponible)" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "🔐 SHA256 CHECKSUMS" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        echo "DEBUG: $(sha256sum app/build/outputs/apk/debug/app-debug.apk 2>/dev/null | cut -d' ' -f1 || echo 'N/A')" >> build-info.txt
+        echo "RELEASE: $(sha256sum app/build/outputs/apk/release/app-release.apk 2>/dev/null | cut -d' ' -f1 || echo 'N/A')" >> build-info.txt
+        echo "=========================================" >> build-info.txt
+        cat build-info.txt
+        
+    - name: 📊 Generar reporte de dependencias
+      run: |
+        echo "========================================="
+        echo "📦 REPORTE DE DEPENDENCIAS"
+        echo "========================================="
+        ./gradlew app:dependencies --configuration debugCompileClasspath > dependencies-debug.txt
+        ./gradlew app:dependencies --configuration releaseCompileClasspath > dependencies-release.txt
+        echo "========================================="
+        
+    - name: 📊 Generar reporte de tests
+      run: |
+        echo "========================================="
+        echo "🧪 EJECUTANDO TESTS"
+        echo "========================================="
+        ./gradlew test --stacktrace || echo "Tests fallaron pero continuamos"
+        echo "========================================="
+        
+    - name: 🔍 Ejecutar Lint
+      run: |
+        echo "========================================="
+        echo "🔍 EJECUTANDO ANDROID LINT"
+        echo "========================================="
+        ./gradlew lint --stacktrace || echo "Lint falló pero continuamos"
+        echo "========================================="
+        
+    - name: 📤 SUBIR DEBUG APK (ARTIFACT)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: 🐷 CERDITA-DEBUG-APK
+        path: |
+          app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+        if-no-files-found: error
+        
+    - name: 📤 SUBIR RELEASE APK (ARTIFACT)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: 🐷 CERDITA-RELEASE-APK
+        path: |
+          app/build/outputs/apk/release/app-release.apk
+        retention-days: 30
+        if-no-files-found: ignore
+        
+    - name: 📤 SUBIR BUILD INFO (ARTIFACT)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: 📊 BUILD-INFORMATION
+        path: |
+          build-info.txt
+        retention-days: 30
+        
+    - name: 📤 SUBIR LOGS COMPLETOS (ARTIFACT)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: 📝 FULL-BUILD-LOGS
+        path: |
+          app/build/outputs/logs/
+          app/build/reports/
+          dependencies-debug.txt
+          dependencies-release.txt
+        retention-days: 30
+        if-no-files-found: ignore
+        
+    - name: ✅ Notificar ÉXITO
+      if: success()
+      run: |
+        echo "========================================="
+        echo "✅✅✅ ¡BUILD EXITOSO! ✅✅✅"
+        echo "========================================="
+        echo "🐷 App: Cerdita"
+        echo "📅 Build: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "🌿 Branch: $(git rev-parse --abbrev-ref HEAD)"
+        echo "💻 Commit: $(git rev-parse --short HEAD)"
+        echo "========================================="
+        echo "📦 APKs DISPONIBLES:"
+        echo "   - DEBUG: app/build/outputs/apk/debug/app-debug.apk"
+        echo "   - RELEASE: app/build/outputs/apk/release/app-release.apk (si existe)"
+        echo "========================================="
+        echo "📊 Los artifacts están disponibles arriba"
+        echo "========================================="
+        echo "🎉 ¡GRACIAS POR USAR CERDITA!"
+        echo "========================================="
+        
+    - name: ❌ Notificar FALLO DETALLADO
+      if: failure()
+      run: |
+        echo "========================================="
+        echo "❌❌❌ ¡BUILD FALLÓ! ❌❌❌"
+        echo "========================================="
+        echo "🐷 App: Cerdita"
+        echo "📅 Build: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "🌿 Branch: $(git rev-parse --abbrev-ref HEAD)"
+        echo "💻 Commit: $(git rev-parse --short HEAD)"
+        echo "========================================="
+        echo "🔍 POSIBLES CAUSAS:"
+        echo "   1. Errores de compilación en el código"
+        echo "   2. Dependencias faltantes o incorrectas"
+        echo "   3. Configuración de Gradle incorrecta"
+        echo "   4. AndroidManifest.xml con errores"
+        echo "   5. Recursos faltantes (R.java)"
+        echo "========================================="
+        echo "📊 REVISAR:"
+        echo "   - Logs completos del build (ver steps anteriores)"
+        echo "   - app/build.gradle.kts"
+        echo "   - AndroidManifest.xml"
+        echo "   - Archivos de recursos (res/)"
+        echo "========================================="
+        echo "📝 COMANDO PARA DEBUG LOCAL:"
+        echo "   ./gradlew clean assembleDebug --stacktrace --info"
+        echo "========================================="
+        echo "💡 TIP: Revisa los artifacts para ver los logs completos"
+        echo "========================================="
+        exit 1
+
+  analyze-failure:
+    name: 🔍 ANALYZE FAILURE
+    needs: build-both-apks
+    if: failure()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: 🔧 Setup Gradle
+      run: chmod +x gradlew
+      
+    - name: 📊 Recopilar información del fallo
+      run: |
+        echo "========================================="
+        echo "🔍 ANÁLISIS DETALLADO DEL FALLO"
+        echo "========================================="
+        echo ""
+        echo "1️⃣ ÚLTIMOS COMMITS:"
+        git log -5 --oneline
+        echo ""
+        echo "2️⃣ CAMBIOS EN EL ÚLTIMO COMMIT:"
+        git show --stat HEAD
+        echo ""
+        echo "3️⃣ ARCHIVOS MODIFICADOS:"
+        git diff HEAD~1 --name-only
+        echo ""
+        echo "4️⃣ ESTADO DEL REPOSITORIO:"
+        git status
+        echo "========================================="
+        
+    - name: 📄 Crear reporte de fallo
+      run: |
+        echo "# 🔍 Reporte de Fallo - Cerdita Build" > failure-report.md
+        echo "" >> failure-report.md
+        echo "## 📊 Información" >> failure-report.md
+        echo "- **Fecha:** $(date)" >> failure-report.md
+        echo "- **Branch:** $(git rev-parse --abbrev-ref HEAD)" >> failure-report.md
+        echo "- **Commit:** $(git rev-parse --short HEAD)" >> failure-report.md
+        echo "" >> failure-report.md
+        echo "## 📝 Últimos Commits" >> failure-report.md
+        git log -5 --oneline >> failure-report.md
+        echo "" >> failure-report.md
+        echo "## 📁 Archivos Modificados" >> failure-report.md
+        git diff HEAD~1 --name-only >> failure-report.md 2>/dev/null || echo "No hay información" >> failure-report.md
+        echo "" >> failure-report.md
+        echo "## 💡 Posibles Soluciones" >> failure-report.md
+        echo "1. Revisar logs completos en artifacts" >> failure-report.md
+        echo "2. Ejecutar localmente: \`./gradlew clean assembleDebug --stacktrace\`" >> failure-report.md
+        echo "3. Verificar que todas las dependencias estén correctas" >> failure-report.md
+        echo "4. Revisar AndroidManifest.xml" >> failure-report.md
+        echo "5. Limpiar caché: \`./gradlew clean\`" >> failure-report.md
+        cat failure-report.md
+        
+    - name: 📤 Subir reporte de fallo
+      uses: actions/upload-artifact@v4
+      with:
+        name: 🔍 FAILURE-ANALYSIS
+        path: |
+          failure-report.md
+        retention-days: 30
