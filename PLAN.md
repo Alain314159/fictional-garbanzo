@@ -44,26 +44,26 @@
 - [x] Setup de módulos (app, core, data, domain)
 - [x] Configurar Git y .gitignore
 - [x] Crear estructura de carpetas
-- [ ] Añadir assets de cerdita y koalita (imágenes base)
-- [ ] **Cambiar nombre de la app a "Cerdita"**
-- [ ] **Crear icono: Cerdita y Koalita abrazándose**
+- [x] Añadir assets de cerdita y koalita (imágenes base)
+- [x] **Cambiar nombre de la app a "Cerdita"**
+- [ ] **Crear icono: Cerdita y Koalita abrazándose** (Pendiente - usar placeholder por ahora)
 
 #### Día 3-4: Arquitectura Base
-- [ ] Crear clases base para MVVM
-- [ ] Configurar Hilt para DI
-- [ ] Crear Application class
-- [ ] Setup de Navigation Compose
-- [ ] Crear tema base (Material 3)
+- [x] Crear clases base para MVVM
+- [x] Configurar Hilt para DI (configurado en build.gradle)
+- [x] Crear Application class (CerditaApplication)
+- [x] Setup de Navigation Compose
+- [x] Crear tema base (Material 3)
 
 #### Día 5-7: Sistema de Claves + Onboarding Romántico
-- [ ] Generación de claves (public/private)
-- [ ] Almacenamiento seguro de private keys (Android Keystore)
-- [ ] **Pantalla de creación de perfil romántico:**
-  - [ ] Input de nombre de usuario (o apodo cariñoso)
+- [ ] Generación de claves (public/private) - **PENDIENTE: Integrar Rhodium SDK**
+- [ ] Almacenamiento seguro de private keys (Android Keystore) - **PENDIENTE**
+- [x] **Pantalla de creación de perfil romántico:**
+  - [x] Input de nombre de usuario (o apodo cariñoso)
   - [ ] Subir foto de perfil O
-  - [ ] Seleccionar avatar (Cerdita 🐷 o Koalita 🐨)
+  - [x] Seleccionar avatar (Cerdita 🐷 o Koalita 🐨)
   - [ ] **Frase romántica inicial** (opcional)
-  - [ ] Botón "Crear Perfil" → genera claves automáticamente
+  - [x] Botón "Crear Perfil" → genera claves automáticamente (UI lista, falta lógica)
   - [ ] Guardar private key en Keystore
   - [ ] Mostrar opción de copiar public key (para compartir con tu novia)
 - [ ] **Intercambio de claves:**
@@ -75,10 +75,10 @@
 **Entregables Semana 1:**
 - ✅ Proyecto compilando
 - ✅ Estructura MVVM funcionando
-- ✅ Generación de claves Nostr funcional
-- ✅ Onboarding romántico con avatares (cerdita/koalita)
-- ✅ Tema visual base
-- ✅ Icono de la app (Cerdita + Koalita)
+- ⏳ Generación de claves Nostr funcional (PENDIENTE: Rhodium SDK)
+- ✅ Onboarding romántico con avatares (cerdita/koalita) - UI COMPLETADA
+- ✅ Tema visual base - 4 TEMAS CREADOS
+- ⏳ Icono de la app (Cerdita + Koalita) (PENDIENTE)
 
 ---
 
