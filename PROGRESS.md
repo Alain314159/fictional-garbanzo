@@ -1,7 +1,7 @@
 # 🐷 Cerdita - Progreso del Desarrollo
 
 **Última actualización:** 2026-03-03  
-**Estado:** ✅ Base completada + 📤 Push a GitHub realizado
+**Estado:** ✅ Base completada + 🔑 Generación de claves Nostr integrada + 📤 Push a GitHub realizado
 
 ---
 
@@ -32,10 +32,11 @@
 - [x] `UserAccount` - Cuenta local
 - [x] `AvatarType` - Tipo de avatar (Piggy/Koala/Photo)
 - [x] `Relay` - Relay de Nostr
+- [x] **`NostrKeyPair`** - Par de claves Nostr ✅
 
 ### 4. UI - Pantallas (UI COMPLETADA)
 - [x] **OnboardingScreen** - Bienvenida 🐷💕🐨
-- [x] **CreateProfileScreen** - Crear perfil con avatar
+- [x] **CreateProfileScreen** - Crear perfil con avatar (CON GENERACIÓN DE CLAVES)
 - [x] **MainScreen** - Pantalla principal con navegación
 - [x] **ChatListScreen** - Lista de chats
 - [x] **Navegación** configurada
@@ -62,15 +63,26 @@
 - [x] PROGRESS.md
 - [x] CERDITA_COMPLETE_SUMMARY.md
 
+### 8. 🔑 NOSTR INTEGRATION (NUEVO)
+- [x] **Rhodium SDK integrado**
+- [x] **Bech32 para npub/nsec**
+- [x] **NostrRepository** (interfaz)
+- [x] **NostrRepositoryImpl** (implementación)
+- [x] **NostrModule** (Hilt DI)
+- [x] **CreateProfileViewModel** (generación de claves)
+- [x] **Generación de claves funcional**
+- [ ] Android Keystore (PENDIENTE - actualmente en memoria)
+- [ ] Publicación real en relays (PENDIENTE)
+
 ---
 
 ## 🚧 Lo que FALTA (Próximos pasos)
 
-### Semana 1-2: Generación de Claves Nostr (PRIORIDAD)
-- [ ] Integrar Rhodium SDK
-- [ ] Generar claves pública/privada
-- [ ] Guardar en Android Keystore
-- [ ] Mostrar clave pública para copiar
+### Semana 1-2: Generación de Claves Nostr
+- [x] Integrar Rhodium SDK ✅
+- [x] Generar claves pública/privada ✅
+- [ ] **Guardar en Android Keystore** (PRIORIDAD)
+- [ ] Mostrar clave pública para copiar (UI lista)
 - [ ] Exportar/importar clave privada
 
 ### Semana 2-3: Conexión a Relays

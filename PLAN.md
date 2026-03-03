@@ -56,16 +56,16 @@
 - [x] Crear tema base (Material 3)
 
 #### Día 5-7: Sistema de Claves + Onboarding Romántico
-- [ ] Generación de claves (public/private) - **PENDIENTE: Integrar Rhodium SDK**
-- [ ] Almacenamiento seguro de private keys (Android Keystore) - **PENDIENTE**
+- [x] Generación de claves (public/private) - **✅ COMPLETADO CON RHODIUM SDK**
+- [ ] Almacenamiento seguro de private keys (Android Keystore) - **⏳ PENDIENTE**
 - [x] **Pantalla de creación de perfil romántico:**
   - [x] Input de nombre de usuario (o apodo cariñoso)
   - [ ] Subir foto de perfil O
   - [x] Seleccionar avatar (Cerdita 🐷 o Koalita 🐨)
   - [ ] **Frase romántica inicial** (opcional)
-  - [x] Botón "Crear Perfil" → genera claves automáticamente (UI lista, falta lógica)
+  - [x] Botón "Crear Perfil" → genera claves automáticamente ✅
   - [ ] Guardar private key en Keystore
-  - [ ] Mostrar opción de copiar public key (para compartir con tu novia)
+  - [x] Mostrar opción de copiar public key (para compartir con tu novia) ✅
 - [ ] **Intercambio de claves:**
   - [ ] Mostrar QR con tu clave pública
   - [ ] Escanear QR de tu novia
@@ -75,10 +75,11 @@
 **Entregables Semana 1:**
 - ✅ Proyecto compilando
 - ✅ Estructura MVVM funcionando
-- ⏳ Generación de claves Nostr funcional (PENDIENTE: Rhodium SDK)
+- ✅ Generación de claves Nostr funcional (Rhodium SDK integrado)
 - ✅ Onboarding romántico con avatares (cerdita/koalita) - UI COMPLETADA
 - ✅ Tema visual base - 4 TEMAS CREADOS
 - ⏳ Icono de la app (Cerdita + Koalita) (PENDIENTE)
+- ⏳ Android Keystore para guardar claves (PENDIENTE)
 
 ---
 
